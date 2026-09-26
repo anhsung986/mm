@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Project MM - Fixed Mobile</title>
+    <title>Project MM - Multi Camera</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; touch-action: none; }
         body { overflow: hidden; background: #000; font-family: 'Segoe UI', sans-serif; }
@@ -15,6 +15,14 @@
         #crosshair::before, #crosshair::after { content: ''; position: absolute; background: #fff; }
         #crosshair::before { top: 6px; left: 0; width: 14px; height: 2px; }
         #crosshair::after { top: 0; left: 6px; width: 2px; height: 14px; }
+
+        /* Nút Chuyển Góc Nhìn */
+        #btn-cam-view {
+            position: absolute; top: 15px; right: 15px; z-index: 30;
+            background: rgba(0, 0, 0, 0.6); color: #00ffcc; border: 1px solid #00ffcc;
+            padding: 8px 15px; border-radius: 20px; font-weight: bold; font-size: 13px;
+        }
+        #btn-cam-view:active { background: rgba(0, 255, 204, 0.4); }
 
         /* HUD Hotbar */
         #hud {
@@ -29,7 +37,7 @@
         }
         .slot.active { border-color: #00ffcc; background: rgba(0, 255, 204, 0.3); box-shadow: 0 0 8px #00ffcc; }
 
-        /* Buttons Mobile */
+        /* Controls Mobile */
         .btn-touch {
             position: absolute; border-radius: 50%; background: rgba(255, 255, 255, 0.3);
             border: 2px solid #fff; color: white; font-weight: bold; font-size: 13px;
@@ -56,6 +64,7 @@
 <body>
 
     <div id="crosshair"></div>
+    <div id="btn-cam-view" onclick="toggleCameraView()">GÓC NHÌN: 3RD</div>
 
     <div id="hud">
         <div class="slot active" id="slot-1" onclick="setSlot(1)">1: Khối Đất</div>
@@ -70,24 +79,37 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
-        let scene, camera, renderer, cameraGroup;
+        let scene, camera, renderer, playerGroup, playerBody;
         let blocks = [];
         let currentSlot = 1;
         let moveX = 0, moveZ = 0;
         let velY = 0, canJump = false;
         
-        // Góc xoay Camera
         let pitch = 0, yaw = 0;
+        
+        // Chế độ Camera: 1 = Góc nhìn 1, 2 = Góc nhìn 2, 3 = Góc nhìn 3
+        let cameraMode = 3; 
 
         function init() {
             scene = new THREE.Scene();
             scene.background = new THREE.Color(0x6eb5ff);
 
-            cameraGroup = new THREE.Group();
+            // Group chứa Người chơi & Camera
+            playerGroup = new THREE.Group();
+            playerGroup.position.set(0, 2.5, 5);
+            scene.add(playerGroup);
+
+            // Mô hình Nhân vật 3D
+            const bodyGeo = new THREE.BoxGeometry(0.8, 1.8, 0.8);
+            const bodyMat = new THREE.MeshLambertMaterial({ color: 0xff3366 });
+            playerBody = new THREE.Mesh(bodyGeo, bodyMat);
+            playerBody.position.y = -0.9;
+            playerGroup.add(playerBody);
+
             camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-            cameraGroup.add(camera);
-            cameraGroup.position.set(0, 2.5, 5);
-            scene.add(cameraGroup);
+            playerGroup.add(camera);
+
+            updateCameraMode();
 
             renderer = new THREE.WebGLRenderer({ antialias: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
@@ -98,7 +120,7 @@
             scene.add(light);
             scene.add(new THREE.AmbientLight(0x666666));
 
-            // Sàn Cỏ
+            // Bản đồ Sàn cỏ
             const groundGeo = new THREE.BoxGeometry(1, 1, 1);
             const grassMat = new THREE.MeshLambertMaterial({ color: 0x47a025 });
             for (let x = -12; x <= 12; x++) {
@@ -114,6 +136,35 @@
             animate();
         }
 
+        // Chuyển đổi giữa 3 Góc Nhìn
+        function toggleCameraView() {
+            cameraMode = (cameraMode % 3) + 1;
+            updateCameraMode();
+        }
+
+        function updateCameraMode() {
+            const btn = document.getElementById('btn-cam-view');
+            if (cameraMode === 1) {
+                // Góc nhìn thứ 1 (Mắt người chơi)
+                camera.position.set(0, 0, 0);
+                camera.rotation.y = 0;
+                playerBody.visible = false; // Ẩn thân nhân vật để không vướng mắt
+                btn.innerText = "GÓC NHÌN: 1ST";
+            } else if (cameraMode === 2) {
+                // Góc nhìn thứ 2 (Đối diện trước mặt)
+                camera.position.set(0, 1, -4);
+                camera.rotation.y = Math.PI; // Quay camera 180 độ nhìn vào mặt
+                playerBody.visible = true;
+                btn.innerText = "GÓC NHÌN: 2ND";
+            } else if (cameraMode === 3) {
+                // Góc nhìn thứ 3 (Sau lưng - Mặc định)
+                camera.position.set(0, 1.5, 4);
+                camera.rotation.y = 0;
+                playerBody.visible = true;
+                btn.innerText = "GÓC NHÌN: 3RD";
+            }
+        }
+
         function setSlot(num) {
             currentSlot = num;
             document.querySelectorAll('.slot').forEach(s => s.classList.remove('active'));
@@ -125,7 +176,7 @@
         }
 
         function setupControls() {
-            // Vuốt nửa phải màn hình để xoay Camera 4 Hướng (Trái/Phải/Lên/Xuống)
+            // Cảm ứng xoay Camera 4 hướng
             let touchStartX = 0, touchStartY = 0;
             document.addEventListener('touchstart', (e) => {
                 for (let t of e.changedTouches) {
@@ -144,11 +195,9 @@
 
                         yaw -= deltaX * 0.005;
                         pitch -= deltaY * 0.005;
-
-                        // Giới hạn góc nhìn lên/xuống (không bị lật ngược)
                         pitch = Math.max(-Math.PI / 2.2, Math.min(Math.PI / 2.2, pitch));
 
-                        cameraGroup.rotation.y = yaw;
+                        playerGroup.rotation.y = yaw;
                         camera.rotation.x = pitch;
 
                         touchStartX = t.clientX;
@@ -178,7 +227,12 @@
                 moveX = 0; moveZ = 0;
             });
 
-            // Nút bấm
+            // Phím tắt PC
+            document.addEventListener('keydown', (e) => {
+                if (e.code === 'Digit4') toggleCameraView();
+            });
+
+            // Nút cảm ứng
             document.getElementById('btn-jump').addEventListener('touchstart', jump);
             document.getElementById('btn-action').addEventListener('touchstart', handlePrimaryAction);
             document.getElementById('btn-break').addEventListener('touchstart', breakBlock);
@@ -190,10 +244,9 @@
 
         function handlePrimaryAction() {
             if (currentSlot === 1 || currentSlot === 2) placeBlock(currentSlot);
-            if (currentSlot === 3) breakBlock(); // Bắn/Phá khối từ xa
+            if (currentSlot === 3) breakBlock();
         }
 
-        // Đặt khối chính xác dựa theo tia nhìn (Raycaster)
         function placeBlock(type) {
             const raycaster = new THREE.Raycaster();
             raycaster.setFromCamera(new THREE.Vector2(0,0), camera);
@@ -224,7 +277,7 @@
 
             if (intersects.length > 0 && intersects[0].distance < 10) {
                 const obj = intersects[0].object;
-                if (obj.position.y !== 0) { // Không phá nền
+                if (obj.position.y !== 0) {
                     scene.remove(obj);
                     blocks = blocks.filter(b => b !== obj);
                 }
@@ -234,28 +287,25 @@
         function animate() {
             requestAnimationFrame(animate);
 
-            // Di chuyển theo hướng nhìn của người chơi
             if (moveX !== 0 || moveZ !== 0) {
                 const dir = new THREE.Vector3(moveX, 0, moveZ);
                 dir.applyAxisAngle(new THREE.Vector3(0, 1, 0), yaw);
-                cameraGroup.translateX(dir.x * 0.12);
-                cameraGroup.translateZ(dir.z * 0.12);
+                playerGroup.translateX(dir.x * 0.12);
+                playerGroup.translateZ(dir.z * 0.12);
             }
 
-            // Trọng lực
-            cameraGroup.position.y += velY;
+            playerGroup.position.y += velY;
             velY -= 0.01;
-            if (cameraGroup.position.y <= 2.5) {
-                cameraGroup.position.y = 2.5;
+            if (playerGroup.position.y <= 2.5) {
+                playerGroup.position.y = 2.5;
                 velY = 0;
                 canJump = true;
             }
 
-            // Xử lý giậm lên khối lò xo (Slot 2)
             blocks.forEach(b => {
                 if (b.userData && b.userData.type === 2) {
-                    if (cameraGroup.position.distanceTo(b.position) < 1.4 && cameraGroup.position.y > b.position.y) {
-                        velY = 0.42; // Bật vọt lên cao
+                    if (playerGroup.position.distanceTo(b.position) < 1.4 && playerGroup.position.y > b.position.y) {
+                        velY = 0.42;
                     }
                 }
             });
