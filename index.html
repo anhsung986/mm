@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Project MM - Voxel Tactical 3D</title>
+    <style>
+        body { margin: 0; overflow: hidden; font-family: sans-serif; }
+        #crosshair {
+            position: absolute; top: 50%; left: 50%;
+            width: 10px; height: 10px;
+            background: red; border-radius: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+        }
+        #instructions {
+            position: absolute; top: 10px; left: 10px;
+            color: white; background: rgba(0,0,0,0.6);
+            padding: 10px; border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div id="crosshair"></div>
+    <div id="instructions">
+        <h3>Project MM - Demo 3D</h3>
+        <p>Click vào màn hình để xoay Camera</p>
+        <p><b>W, A, S, D:</b> Di chuyển</p>
+        <p><b>Space:</b> Nhảy</p>
+        <p><b>Chuột trái:</b> Đặt khối (Voxel)</p>
+    </div>
+
+    <!-- Import thư viện Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.min.js"></script>
+    <script>
+        // Khởi tạo Scene, Camera, Renderer
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x87ceeb);
+
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        // Ánh sáng
+        const light = new THREE.DirectionalLight(0xffffff, 1);
+        light.position.set(10, 20, 10).normalize();
+        scene.add(light);
+        scene.add(new THREE.AmbientLight(0x404040));
+
+        // Mặt đất
+        const gridHelper = new THREE.GridHelper(50, 50);
+        scene.add(gridHelper);
+
+        // Nhân vật
+        camera.position.set(0, 1.6, 5);
+
+        // Xử lý di chuyển & Camera
+        let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false;
+        let isJumping = false, velocityY = 0;
+
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'KeyW') moveForward = true;
+            if (e.code === 'KeyS') moveBackward = true;
+            if (e.code === 'KeyA') moveLeft = true;
+            if (e.code === 'KeyD') moveRight = true;
+            if (e.code === 'Space' && !isJumping) { isJumping = true; velocityY = 0.15; }
+        });
+
+        document.addEventListener('keyup', (e) => {
+            if (e.code === 'KeyW') moveForward = false;
+            if (e.code === 'KeyS') moveBackward = false;
+            if (e.code === 'KeyA') moveLeft = false;
+            if (e.code === 'KeyD') moveRight = false;
+        });
+
+        // Khóa con trỏ chuột
+        document.body.addEventListener('click', () => {
+            document.body.requestPointerLock();
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (document.pointerLockElement === document.body) {
+                camera.rotation.y -= e.movementX * 0.002;
+            }
+        });
+
+        // Đặt khối 3D khi nhấp chuột trái
+        document.addEventListener('mousedown', (e) => {
+            if (document.pointerLockElement === document.body && e.button === 0) {
+                const geometry = new THREE.BoxGeometry(1, 1, 1);
+                const material = new THREE.MeshLambertMaterial({ color: 0x00ff00 });
+                const cube = new THREE.Mesh(geometry, material);
+                
+                // Đặt khối phía trước camera
+                const dir = new THREE.Vector3();
+                camera.getWorldDirection(dir);
+                cube.position.copy(camera.position).add(dir.multiplyScalar(3));
+                cube.position.x = Math.round(cube.position.x);
+                cube.position.y = Math.round(cube.position.y);
+                cube.position.z = Math.round(cube.position.z);
+
+                scene.add(cube);
+            }
+        });
+
+        // Loop cập nhật khung hình
+        function animate() {
+            requestAnimationFrame(animate);
+
+            // Xử lý di chuyển
+            const speed = 0.1;
+            if (moveForward) camera.translateZ(-speed);
+            if (moveBackward) camera.translateZ(speed);
+            if (moveLeft) camera.translateX(-speed);
+            if (moveRight) camera.translateX(speed);
+
+            // Xử lý trọng lực / nhảy
+            if (isJumping) {
+                camera.position.y += velocityY;
+                velocityY -= 0.008; // Trọng lực
+                if (camera.position.y <= 1.6) {
+                    camera.position.y = 1.6;
+                    isJumping = false;
+                }
+            }
+
+            renderer.render(scene, camera);
+        }
+        animate();
+    </script>
+</body>
+  </html>
+  
