@@ -2,132 +2,281 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Project MM - Voxel Tactical 3D</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project MM - Voxel Tactical Royale</title>
     <style>
-        body { margin: 0; overflow: hidden; font-family: sans-serif; }
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+        body { overflow: hidden; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #000; }
+        
+        /* Giao diện UI Game */
         #crosshair {
-            position: absolute; top: 50%; left: 50%;
-            width: 10px; height: 10px;
-            background: red; border-radius: 50%;
-            transform: translate(-50%, -50%);
-            pointer-events: none;
+            position: absolute; top: 50%; left: 50%; width: 14px; height: 14px;
+            transform: translate(-50%, -50%); pointer-events: none; z-index: 10;
         }
-        #instructions {
-            position: absolute; top: 10px; left: 10px;
-            color: white; background: rgba(0,0,0,0.6);
-            padding: 10px; border-radius: 5px;
+        #crosshair::before, #crosshair::after {
+            content: ''; position: absolute; background: rgba(255, 255, 255, 0.9);
+        }
+        #crosshair::before { top: 6px; left: 0; width: 14px; height: 2px; }
+        #crosshair::after { top: 0; left: 6px; width: 2px; height: 14px; }
+
+        #hud {
+            position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+            display: flex; gap: 15px; background: rgba(0, 0, 0, 0.6); padding: 10px 20px;
+            border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.2); z-index: 10;
+        }
+        .slot {
+            width: 50px; height: 50px; border: 2px solid #555; border-radius: 8px;
+            display: flex; align-items: center; justify-content: center; font-weight: bold;
+            color: #fff; font-size: 14px; background: rgba(255,255,255,0.1); cursor: pointer;
+        }
+        .slot.active { border-color: #00ffcc; background: rgba(0, 255, 204, 0.2); box-shadow: 0 0 10px #00ffcc; }
+
+        #overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7); color: white; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; z-index: 20; cursor: pointer;
+        }
+        #overlay h1 { font-size: 3rem; color: #00ffcc; text-shadow: 0 0 10px #00ffcc; margin-bottom: 10px; }
+        #overlay p { font-size: 1.2rem; color: #ccc; margin-top: 5px; }
+
+        /* Mô hình súng FPS giả lập */
+        #gun-hud {
+            position: absolute; bottom: 0; right: 20%; width: 200px; height: 200px;
+            background: linear-gradient(135deg, #333, #111);
+            clip-path: polygon(40% 0%, 100% 40%, 80% 100%, 0% 80%);
+            pointer-events: none; z-index: 5; transform: rotate(-10deg);
         }
     </style>
 </head>
 <body>
+
     <div id="crosshair"></div>
-    <div id="instructions">
-        <h3>Project MM - Demo 3D</h3>
-        <p>Click vào màn hình để xoay Camera</p>
-        <p><b>W, A, S, D:</b> Di chuyển</p>
-        <p><b>Space:</b> Nhảy</p>
-        <p><b>Chuột trái:</b> Đặt khối (Voxel)</p>
+    <div id="gun-hud"></div>
+
+    <div id="hud">
+        <div class="slot active" id="slot-1">1: Khối Đất</div>
+        <div class="slot" id="slot-2">2: Lò Xo</div>
+        <div class="slot" id="slot-3">3: Súng</div>
     </div>
 
-    <!-- Import thư viện Three.js -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.min.js"></script>
+    <div id="overlay">
+        <h1>PROJECT MM</h1>
+        <p><b>CLICK ĐỂ BẮT ĐẦU CHƠI</b></p>
+        <p style="font-size: 0.9rem; margin-top: 15px;">W A S D: Di chuyển | Space: Nhảy | Chuột trái: Đặt khối / Bắn | Chuột phải: Phá khối | Phím 1, 2, 3: Chọn vũ khí</p>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
-        // Khởi tạo Scene, Camera, Renderer
-        const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x87ceeb);
+        let scene, camera, renderer, player;
+        let blocks = [];
+        let currentSlot = 1;
+        
+        // Khởi tạo Game
+        function init() {
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x6eb5ff); // Bầu trời
+            scene.fog = new THREE.FogExp2(0x6eb5ff, 0.015);
 
-        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        const renderer = new THREE.WebGLRenderer();
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        document.body.appendChild(renderer.domElement);
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMap.enabled = true;
+            document.body.appendChild(renderer.domElement);
 
-        // Ánh sáng
-        const light = new THREE.DirectionalLight(0xffffff, 1);
-        light.position.set(10, 20, 10).normalize();
-        scene.add(light);
-        scene.add(new THREE.AmbientLight(0x404040));
+            // Ánh sáng Mặt Trời & Bóng đổ
+            const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
+            dirLight.position.set(20, 40, 20);
+            dirLight.castShadow = true;
+            scene.add(dirLight);
+            scene.add(new THREE.AmbientLight(0x666666));
 
-        // Mặt đất
-        const gridHelper = new THREE.GridHelper(50, 50);
-        scene.add(gridHelper);
-
-        // Nhân vật
-        camera.position.set(0, 1.6, 5);
-
-        // Xử lý di chuyển & Camera
-        let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false;
-        let isJumping = false, velocityY = 0;
-
-        document.addEventListener('keydown', (e) => {
-            if (e.code === 'KeyW') moveForward = true;
-            if (e.code === 'KeyS') moveBackward = true;
-            if (e.code === 'KeyA') moveLeft = true;
-            if (e.code === 'KeyD') moveRight = true;
-            if (e.code === 'Space' && !isJumping) { isJumping = true; velocityY = 0.15; }
-        });
-
-        document.addEventListener('keyup', (e) => {
-            if (e.code === 'KeyW') moveForward = false;
-            if (e.code === 'KeyS') moveBackward = false;
-            if (e.code === 'KeyA') moveLeft = false;
-            if (e.code === 'KeyD') moveRight = false;
-        });
-
-        // Khóa con trỏ chuột
-        document.body.addEventListener('click', () => {
-            document.body.requestPointerLock();
-        });
-
-        document.addEventListener('mousemove', (e) => {
-            if (document.pointerLockElement === document.body) {
-                camera.rotation.y -= e.movementX * 0.002;
+            // Bản đồ Sàn cỏ 3D (Voxel Ground)
+            const groundGeo = new THREE.BoxGeometry(1, 1, 1);
+            const grassMat = new THREE.MeshLambertMaterial({ color: 0x47a025 });
+            
+            for (let x = -15; x <= 15; x++) {
+                for (let z = -15; z <= 15; z++) {
+                    const cube = new THREE.Mesh(groundGeo, grassMat);
+                    cube.position.set(x, 0, z);
+                    cube.receiveShadow = true;
+                    cube.castShadow = true;
+                    scene.add(cube);
+                    blocks.push(cube);
+                }
             }
-        });
 
-        // Đặt khối 3D khi nhấp chuột trái
-        document.addEventListener('mousedown', (e) => {
-            if (document.pointerLockElement === document.body && e.button === 0) {
-                const geometry = new THREE.BoxGeometry(1, 1, 1);
-                const material = new THREE.MeshLambertMaterial({ color: 0x00ff00 });
-                const cube = new THREE.Mesh(geometry, material);
+            // Vị trí xuất phát người chơi
+            camera.position.set(0, 3, 5);
+
+            // Sự kiện điều khiển
+            setupEvents();
+            animate();
+        }
+
+        // Logic Di chuyển & Vật lý
+        let moveFwd = false, moveBwd = false, moveLft = false, moveRgt = false;
+        let velY = 0, canJump = false;
+
+        function setupEvents() {
+            const overlay = document.getElementById('overlay');
+            overlay.addEventListener('click', () => {
+                document.body.requestPointerLock();
+            });
+
+            document.addEventListener('pointerlockchange', () => {
+                overlay.style.display = (document.pointerLockElement === document.body) ? 'none' : 'flex';
+            });
+
+            document.addEventListener('keydown', (e) => {
+                if (e.code === 'KeyW') moveFwd = true;
+                if (e.code === 'KeyS') moveBwd = true;
+                if (e.code === 'KeyA') moveLft = true;
+                if (e.code === 'KeyD') moveRgt = true;
+                if (e.code === 'Space' && canJump) { velY = 0.22; canJump = false; }
                 
-                // Đặt khối phía trước camera
-                const dir = new THREE.Vector3();
-                camera.getWorldDirection(dir);
-                cube.position.copy(camera.position).add(dir.multiplyScalar(3));
-                cube.position.x = Math.round(cube.position.x);
-                cube.position.y = Math.round(cube.position.y);
-                cube.position.z = Math.round(cube.position.z);
+                if (e.code === 'Digit1') setSlot(1);
+                if (e.code === 'Digit2') setSlot(2);
+                if (e.code === 'Digit3') setSlot(3);
+            });
 
-                scene.add(cube);
+            document.addEventListener('keyup', (e) => {
+                if (e.code === 'KeyW') moveFwd = false;
+                if (e.code === 'KeyS') moveBwd = false;
+                if (e.code === 'KeyA') moveLft = false;
+                if (e.code === 'KeyD') moveRgt = false;
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (document.pointerLockElement === document.body) {
+                    camera.rotation.y -= e.movementX * 0.0025;
+                }
+            });
+
+            // Đặt khối / Bắn (Chuột trái & phải)
+            document.addEventListener('mousedown', (e) => {
+                if (document.pointerLockElement !== document.body) return;
+                
+                if (e.button === 0) { // Chuột trái: Đặt / Bắn
+                    if (currentSlot === 1 || currentSlot === 2) placeBlock(currentSlot);
+                    if (currentSlot === 3) shoot();
+                } else if (e.button === 2) { // Chuột phải: Phá khối
+                    breakBlock();
+                }
+            });
+        }
+
+        function setSlot(num) {
+            currentSlot = num;
+            document.querySelectorAll('.slot').forEach(s => s.classList.remove('active'));
+            document.getElementById(`slot-${num}`).classList.add('active');
+        }
+
+        // Cơ chế Đặt Khối Voxel
+        function placeBlock(type) {
+            const raycaster = new THREE.Raycaster();
+            raycaster.setFromCamera(new THREE.Vector2(0,0), camera);
+            const intersects = raycaster.intersectObjects(blocks);
+
+            if (intersects.length > 0 && intersects[0].distance < 8) {
+                const intersect = intersects[0];
+                const pos = intersect.point.clone().add(intersect.face.normal.clone().multiplyScalar(0.5));
+                
+                const geo = new THREE.BoxGeometry(1, 1, 1);
+                let mat;
+                
+                if (type === 1) mat = new THREE.MeshLambertMaterial({ color: 0x8b5a2b }); // Khối Đất
+                if (type === 2) mat = new THREE.MeshLambertMaterial({ color: 0xffcc00, emissive: 0x332200 }); // Lò xo
+
+                const block = new THREE.Mesh(geo, mat);
+                block.position.set(Math.round(pos.x), Math.round(pos.y), Math.round(pos.z));
+                block.castShadow = true;
+                block.receiveShadow = true;
+                block.userData = { type: type };
+
+                scene.add(block);
+                blocks.push(block);
             }
-        });
+        }
 
-        // Loop cập nhật khung hình
+        // Cơ chế Phá Khối
+        function breakBlock() {
+            const raycaster = new THREE.Raycaster();
+            raycaster.setFromCamera(new THREE.Vector2(0,0), camera);
+            const intersects = raycaster.intersectObjects(blocks);
+
+            if (intersects.length > 0 && intersects[0].distance < 8) {
+                const obj = intersects[0].object;
+                if (obj.position.y !== 0) { // Không cho phá mặt đất chính
+                    scene.remove(obj);
+                    blocks = blocks.filter(b => b !== obj);
+                }
+            }
+        }
+
+        // Cơ chế Bắn súng
+        function shoot() {
+            // Hiệu ứng giật súng
+            const gun = document.getElementById('gun-hud');
+            gun.style.transform = 'rotate(-5deg) translateY(10px)';
+            setTimeout(() => gun.style.transform = 'rotate(-10deg) translateY(0)', 100);
+
+            // Bắn tia Raycast phá khối từ xa
+            const raycaster = new THREE.Raycaster();
+            raycaster.setFromCamera(new THREE.Vector2(0,0), camera);
+            const intersects = raycaster.intersectObjects(blocks);
+
+            if (intersects.length > 0) {
+                const obj = intersects[0].object;
+                if (obj.position.y !== 0) {
+                    scene.remove(obj);
+                    blocks = blocks.filter(b => b !== obj);
+                }
+            }
+        }
+
+        // Game Loop
         function animate() {
             requestAnimationFrame(animate);
 
             // Xử lý di chuyển
-            const speed = 0.1;
-            if (moveForward) camera.translateZ(-speed);
-            if (moveBackward) camera.translateZ(speed);
-            if (moveLeft) camera.translateX(-speed);
-            if (moveRight) camera.translateX(speed);
+            const speed = 0.12;
+            if (moveFwd) camera.translateZ(-speed);
+            if (moveBwd) camera.translateZ(speed);
+            if (moveLft) camera.translateX(-speed);
+            if (moveRgt) camera.translateX(speed);
 
-            // Xử lý trọng lực / nhảy
-            if (isJumping) {
-                camera.position.y += velocityY;
-                velocityY -= 0.008; // Trọng lực
-                if (camera.position.y <= 1.6) {
-                    camera.position.y = 1.6;
-                    isJumping = false;
-                }
+            // Trọng lực & Nhảy
+            camera.position.y += velY;
+            velY -= 0.01; // Trọng lực
+
+            // Va chạm cơ bản với mặt đất & khối
+            if (camera.position.y <= 2.5) {
+                camera.position.y = 2.5;
+                velY = 0;
+                canJump = true;
             }
+
+            // Tương tác dẫm lên Khối Lò Xo (Slot 2)
+            blocks.forEach(b => {
+                if (b.userData.type === 2) {
+                    const dist = camera.position.distanceTo(b.position);
+                    if (dist < 1.5 && camera.position.y > b.position.y) {
+                        velY = 0.45; // Bật vọt lên cao cực đại
+                    }
+                }
+            });
 
             renderer.render(scene, camera);
         }
-        animate();
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        init();
     </script>
 </body>
-  </html>
-  
+</html>
