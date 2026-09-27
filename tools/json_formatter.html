@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Định Dạng & Kiểm Tra JSON</title>
+    <style>
+        :root {
+            --bg-main: #090d16; --bg-card: #111827; --text-main: #f3f4f6;
+            --text-sec: #9ca3af; --accent-cyan: #22ffff; --accent-pink: #fe86a4;
+            --border-color: #1f2937; --textarea-bg: #030712;
+        }
+        body { background-color: var(--bg-main); color: var(--text-main); font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; display: flex; justify-content: center; }
+        .container { width: 100%; max-width: 800px; }
+        .back-btn { color: var(--accent-cyan); text-decoration: none; display: inline-block; margin-bottom: 20px; font-weight: bold; }
+        .box { background: var(--bg-card); border: 1px solid var(--border-color); padding: 20px; border-radius: 12px; }
+        h2 { color: var(--accent-cyan); margin-top: 0; }
+        textarea { width: 100%; height: 220px; background: var(--textarea-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px; color: #34d399; font-family: 'Courier New', Courier, monospace; font-size: 0.9rem; box-sizing: border-box; resize: vertical; outline: none; }
+        textarea:focus { border-color: var(--accent-cyan); }
+        .btn-group { margin-top: 12px; display: flex; gap: 10px; align-items: center; }
+        button { background-color: var(--accent-pink); color: var(--bg-main); font-weight: bold; border: none; border-radius: 6px; padding: 8px 16px; cursor: pointer; transition: 0.2s; }
+        button:hover { opacity: 0.85; }
+        #statusMsg { font-size: 0.9rem; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="../index.html" class="back-btn">&larr; Quay lại trang chủ Hub</a>
+        <div class="box">
+            <h2>{} Công Cụ Định Dạng & Kiểm Tra JSON</h2>
+            <p style="color: var(--text-sec);">Dán đoạn mã JSON của bạn vào bên dưới để làm đẹp hoặc kiểm tra lỗi cú pháp.</p>
+            <textarea id="jsonInput" placeholder='Dán mã JSON vào đây (vd: {"name": "Server", "port": 25565})'></textarea>
+            <div class="btn-group">
+                <button onclick="formatJSON()">Làm Đẹp (Beautify)</button>
+                <button onclick="minifyJSON()" style="background-color: var(--accent-cyan);">Thu Gọn (Minify)</button>
+                <span id="statusMsg"></span>
+            </div>
+        </div>
+    </div>
+    <script>
+        function formatJSON() {
+            const input = document.getElementById('jsonInput');
+            const status = document.getElementById('statusMsg');
+            try {
+                const parsed = JSON.parse(input.value);
+                input.value = JSON.stringify(parsed, null, 4);
+                status.style.color = "#34d399";
+                status.innerText = "✓ JSON hợp lệ và đã được làm đẹp!";
+            } catch (e) {
+                status.style.color = "#fe86a4";
+                status.innerText = "✗ Lỗi cú pháp JSON: " + e.message;
+            }
+        }
+        function minifyJSON() {
+            const input = document.getElementById('jsonInput');
+            const status = document.getElementById('statusMsg');
+            try {
+                const parsed = JSON.parse(input.value);
+                input.value = JSON.stringify(parsed);
+                status.style.color = "#34d399";
+                status.innerText = "✓ Đã thu gọn JSON thành công!";
+            } catch (e) {
+                status.style.color = "#fe86a4";
+                status.innerText = "✗ Lỗi cú pháp JSON: " + e.message;
+            }
+        }
+    </script>
+</body>
+</html>
