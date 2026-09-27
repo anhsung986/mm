@@ -1,240 +1,122 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sùng Tuấn Anh - Cyber Hub</title>
+    <meta charset="utf-8">
+    <title>Minecraft Server Manager - Paper 26.2 (4GB RAM)</title>
     <style>
-        :root {
-            --bg-main: #090d16;
-            --bg-card: #111827;
-            --text-main: #f3f4f6;
-            --text-sec: #9ca3af;
-            --accent-cyan: #22ffff;
-            --accent-pink: #fe86a4;
-            --border-color: #1f2937;
-        }
-        * { box-sizing: border-box; }
         body {
-            background-color: var(--bg-main);
-            color: var(--text-main);
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            padding: 20px;
+            background-color: #111827;
+            color: #ffffff;
+            font-family: Arial, sans-serif;
+            padding: 30px;
+            line-height: 1.5;
         }
-        .container { max-width: 1200px; margin: 0 auto; }
-        header {
-            text-align: center;
-            margin-bottom: 30px;
-            padding: 20px;
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 16px;
-            box-shadow: 0 0 20px rgba(34, 255, 255, 0.05);
-        }
-        header h1 {
-            color: var(--accent-cyan);
-            font-size: 2.5rem;
-            margin: 0 0 10px 0;
-            text-shadow: 0 0 10px rgba(34, 255, 255, 0.3);
-        }
-        header p { color: var(--text-sec); margin: 0; font-size: 1.1rem; }
-        
-        .controls {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            margin-bottom: 30px;
-        }
-        @media (min-width: 768px) {
-            .controls { flex-direction: row; justify-content: space-between; align-items: center; }
-        }
-        .search-box input {
-            width: 100%;
-            padding: 14px 20px;
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 30px;
-            color: var(--text-main);
-            font-size: 1rem;
-            outline: none;
-            transition: all 0.3s;
-        }
-        .search-box input:focus {
-            border-color: var(--accent-cyan);
-            box-shadow: 0 0 10px rgba(34, 255, 255, 0.2);
-        }
-        .categories { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 5px; }
-        .cat-btn {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            color: var(--text-sec);
-            padding: 8px 16px;
-            border-radius: 20px;
-            cursor: pointer;
-            white-space: nowrap;
-            transition: all 0.2s;
-            font-size: 0.9rem;
-        }
-        .cat-btn:hover, .cat-btn.active {
-            background: var(--accent-cyan);
-            color: var(--bg-main);
-            border-color: var(--accent-cyan);
-            font-weight: bold;
-        }
-
-        .grid-tools {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 20px;
-        }
-        .tool-card {
-            background-color: var(--bg-card);
-            border: 1px solid var(--border-color);
+        .container {
+            max-width: 750px;
+            margin: 0 auto;
+            background: #1f2937;
+            padding: 30px;
             border-radius: 12px;
-            padding: 20px;
-            text-decoration: none;
-            color: var(--text-main);
-            transition: all 0.25s ease;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
         }
-        .tool-card:hover {
-            border-color: var(--accent-cyan);
-            transform: translateY(-4px);
-            box-shadow: 0 6px 20px rgba(34, 255, 255, 0.1);
-        }
-        .tool-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
-        .tool-card h3 { margin: 0; font-size: 1.2rem; color: var(--accent-cyan); }
-        .badge {
-            background-color: var(--accent-pink);
-            color: var(--bg-main);
-            font-size: 0.75rem;
-            font-weight: bold;
-            padding: 4px 10px;
+        h2 { color: #10b981; margin-top: 0; }
+        h3 { color: #34d399; margin-top: 20px; font-size: 16px; }
+        .box {
+            background: #030712;
+            padding: 15px;
             border-radius: 6px;
+            color: #34d399;
+            font-family: monospace;
+            font-size: 14px;
+            margin: 10px 0;
+            border: 1px solid #374151;
+            white-space: pre-wrap;
+            word-break: break-all;
         }
-        .tool-card p { margin: 0 0 15px 0; font-size: 0.9rem; color: var(--text-sec); line-height: 1.4; }
-        .action-link { color: var(--accent-cyan); font-size: 0.85rem; font-weight: bold; display: inline-flex; align-items: center; gap: 5px; }
-        footer { text-align: center; margin-top: 50px; padding: 20px; color: var(--text-sec); font-size: 0.9rem; border-top: 1px solid var(--border-color); }
+        .btn {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            cursor: pointer;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+        .btn:hover { background: #059669; }
+        .link-box {
+            display: inline-block;
+            background: #2563eb;
+            color: white;
+            padding: 10px 18px;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+        .link-box:hover { background: #1d4ed8; }
+        hr { border: 0; border-top: 1px solid #374151; margin: 25px 0; }
+        .note { color: #9ca3af; font-size: 13px; margin-top: 5px; }
+        ol { padding-left: 20px; color: #d1d5db; }
+        li { margin-bottom: 8px; }
     </style>
 </head>
 <body>
+
     <div class="container">
-        <header>
-            <h1>Sùng Tuấn Anh - Cyber Hub</h1>
-            <p>Hệ thống siêu ứng dụng tổng hợp công cụ & quản lý máy chủ</p>
-        </header>
+        <h2>⚡ Quản Lý Server Minecraft 26.2 (4GB RAM)</h2>
+        
+        <!-- HƯỚNG DẪN TẠO SERVER -->
+        <h3>📖 Hướng dẫn nhanh các bước tạo Server:</h3>
+        <ol>
+            <li><b>Cài đặt Java:</b> Máy tính cần cài sẵn Java mới nhất để chạy phiên bản 26.2.</li>
+            <li><b>Tạo thư mục:</b> Tạo một thư mục trống mới trên máy (ví dụ: <code>ServerMinecraft</code>).</li>
+            <li><b>Tải nhân Server:</b> Bấm nút tải nhân Paper 26.2 bên dưới và cho file vào thư mục đó.</li>
+            <li><b>Đổi tên file:</b> Đổi tên file vừa tải thành chính xác: <b><code>paper.jar</code></b>.</li>
+            <li><b>Tạo file khởi động:</b> Tạo file văn bản, dán mã khởi động 4GB RAM bên dưới vào, lưu lại với tên <b><code>start.bat</code></b>.</li>
+            <li><b>Chạy Server:</b> Click đúp vào <code>start.bat</code>. Khi báo lỗi EULA, mở file <code>eula.txt</code> đổi thành <code>eula=true</code> rồi chạy lại lần nữa!</li>
+        </ol>
 
-        <div class="controls">
-            <div class="search-box" style="flex: 1; max-width: 450px;">
-                <input type="text" id="searchInput" placeholder="🔍 Tìm kiếm tính năng nhanh..." onkeyup="filterTools()">
-            </div>
-            <div class="categories">
-                <button class="cat-btn active" onclick="filterCategory('all', this)">Tất cả</button>
-                <button class="cat-btn" onclick="filterCategory('server', this)">Minecraft Server</button>
-                <button class="cat-btn" onclick="filterCategory('discord', this)">Discord Bots</button>
-                <button class="cat-btn" onclick="filterCategory('utility', this)">Tiện ích & Dev</button>
-            </div>
-        </div>
+        <hr>
 
-        <div class="grid-tools" id="toolGrid">
-            <!-- Minecraft Server Group -->
-            <a href="sv/servermc.html" class="tool-card" data-category="server" data-name="minecraft server vietmc quản lý máy chủ game">
-                <div>
-                    <div class="tool-header">
-                        <h3>⛏️ Quản Lý Minecraft Server</h3>
-                        <span class="badge" style="background: var(--accent-cyan); color: var(--bg-main);">Server</span>
-                    </div>
-                    <p>Trang thông tin chung, trạng thái kết nối và điều hướng quản lý máy chủ Minecraft.</p>
-                </div>
-                <span class="action-link">Truy cập ngay &rarr;</span>
-            </a>
+        <!-- PHẦN TẢI PAPER 26.2 -->
+        <h3>📥 Tải xuống nhân Paper 26.2:</h3>
+        <a class="link-box" href="https://papermc.io/downloads/paper" target="_blank">👉 Tải trực tiếp Paper 26.2 (.jar)</a>
+        <div class="note">Link tải trực tiếp bản ổn định của phiên bản 26.2</div>
 
-            <a href="sv/qlsv.html" class="tool-card" data-category="server" data-name="qlsv console lệnh file manager minecraft">
-                <div>
-                    <div class="tool-header">
-                        <h3>⚡ Console & File Server</h3>
-                        <span class="badge" style="background: var(--accent-cyan); color: var(--bg-main);">Server</span>
-                    </div>
-                    <p>Gửi lệnh trực tiếp vào bảng điều khiển console và xem/sửa cấu hình file máy chủ.</p>
-                </div>
-                <span class="action-link">Truy cập ngay &rarr;</span>
-            </a>
+        <hr>
 
-            <a href="sv/plugins.html" class="tool-card" data-category="server" data-name="plugins fawe worldguard bluemap quản lý">
-                <div>
-                    <div class="tool-header">
-                        <h3>🧩 Quản Lý Plugin</h3>
-                        <span class="badge" style="background: var(--accent-cyan); color: var(--bg-main);">Server</span>
-                    </div>
-                    <p>Kiểm soát trạng thái các plugin cốt lõi như FAWE, WorldGuard, BlueMap.</p>
-                </div>
-                <span class="action-link">Truy cập ngay &rarr;</span>
-            </a>
+        <!-- PHẦN MÃ KHỞI ĐỘNG 4GB RAM -->
+        <h3>💻 Mã Khởi Động Server (Cấu hình tối ưu 4GB RAM):</h3>
+        
+        <p class="note">Dành cho <b>Windows (Dán vào file start.bat)</b>:</p>
+        <div class="box" id="code-win">java -Xms2G -Xmx4G -XX:+UseG1GC -jar paper.jar nogui
+pause</div>
+        <button class="btn" onclick="copyText('code-win', this)">Sao chép lệnh Windows</button>
 
-            <!-- Discord Bot Group -->
-            <a href="dis/botql.html" class="tool-card" data-category="discord" data-name="discord botql quản lý bot">
-                <div>
-                    <div class="tool-header">
-                        <h3>🤖 Quản Lý Discord Bots</h3>
-                        <span class="badge" style="background: #5865F2; color: #fff;">Discord</span>
-                    </div>
-                    <p>Bảng điều khiển chung (Dashboard) để theo dõi và cấu hình toàn bộ hệ thống bot.</p>
-                </div>
-                <span class="action-link">Truy cập ngay &rarr;</span>
-            </a>
-
-            <!-- Utilities Group -->
-            <a href="tools/json_formatter.html" class="tool-card" data-category="utility" data-name="json formatter lập trình dev tools">
-                <div>
-                    <div class="tool-header">
-                        <h3>{} Định Dạng JSON</h3>
-                        <span class="badge">Dev Tool</span>
-                    </div>
-                    <p>Công cụ kiểm tra lỗi cú pháp, làm đẹp và thu gọn chuỗi JSON cấu hình.</p>
-                </div>
-                <span class="action-link">Trải nghiệm ngay &rarr;</span>
-            </a>
-
-            <a href="tools/notes.html" class="tool-card" data-category="utility" data-name="ghi chú nhanh quick notes">
-                <div>
-                    <div class="tool-header">
-                        <h3>📝 Ghi Chú Nhanh</h3>
-                        <span class="badge">Tiện ích</span>
-                    </div>
-                    <p>Lưu ý tưởng, công việc cần làm trực tiếp trên trình duyệt cá nhân.</p>
-                </div>
-                <span class="action-link">Trải nghiệm ngay &rarr;</span>
-            </a>
-        </div>
-
-        <footer>
-            <p>&copy; 2026 Sùng Tuấn Anh. Thiết kế theo phong cách Cyberpunk độc quyền.</p>
-        </footer>
+        <p class="note" style="margin-top: 15px;">Dành cho <b>Linux / VPS / Pterodactyl Panel</b>:</p>
+        <div class="box" id="code-linux">java -Xms2G -Xmx4G -XX:+UseG1GC -jar paper.jar nogui</div>
+        <button class="btn" onclick="copyText('code-linux', this)">Sao chép lệnh Linux</button>
+        
+        <div class="note" style="margin-top: 15px; color: #facc15;">💡 <i>Lưu ý: <code>-Xms2G</code> (RAM tối thiểu 2GB), <code>-Xmx4G</code> (RAM tối đa 4GB). Đảm bảo file trong thư mục tên đúng là <code>paper.jar</code>.</i></div>
     </div>
 
     <script>
-        let currentCategory = 'all';
-        function filterTools() {
-            const input = document.getElementById('searchInput').value.toLowerCase();
-            const cards = document.getElementsByClassName('tool-card');
-            for (let i = 0; i < cards.length; i++) {
-                const keywords = cards[i].getAttribute('data-name');
-                const category = cards[i].getAttribute('data-category');
-                const matchesSearch = keywords.includes(input);
-                const matchesCategory = (currentCategory === 'all' || category === currentCategory);
-                cards[i].style.display = (matchesSearch && matchesCategory) ? "flex" : "none";
-            }
-        }
-        function filterCategory(category, element) {
-            currentCategory = category;
-            const buttons = document.getElementsByClassName('cat-btn');
-            for (let btn of buttons) btn.classList.remove('active');
-            element.classList.add('active');
-            filterTools();
+        function copyText(elementId, btnElement) {
+            var text = document.getElementById(elementId).innerText;
+            navigator.clipboard.writeText(text).then(() => {
+                var originalText = btnElement.innerText;
+                btnElement.innerText = "✅ Đã sao chép!";
+                btnElement.style.background = "#047857";
+                setTimeout(() => {
+                    btnElement.innerText = originalText;
+                    btnElement.style.background = "#10b981";
+                }, 2000);
+            });
         }
     </script>
+
 </body>
 </html>
