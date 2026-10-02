@@ -1,0 +1,9 @@
+{
+  "permalink": "/:title/",
+  "exclude": [
+    "README.md",
+    "node_modules"
+  ],
+  "future": true,
+  "show_drafts": false
+}
